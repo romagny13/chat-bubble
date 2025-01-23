@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Chat Bubble Plugin Démo</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
+    />
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .chat-bubble-container {
+        border: 1px solid #e0e0e0;
+        border-radius: 10px 10px 0 0;
+        height: 500px;
+        display: flex;
+        flex-direction: column;
+        background-color: #f5f5f5;
+      }
+      .chat-message-list {
+        flex-grow: 1;
+        overflow-y: auto;
+        padding: 20px;
+      }
+      .chat-bubble {
+        max-width: 70%;
+        margin: 16px 0;
+        padding: 12px 18px;
+        border-radius: 22px;
+        clear: both;
+        position: relative;
+        box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
+        animation-duration: 0.6s;
+        animation-fill-mode: both;
+      }
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translate3d(0, 20px, 0);
+        }
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+      @keyframes fadeInDown {
+        from {
+          opacity: 0;
+          transform: translate3d(0, -20px, 0);
+        }
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+      @keyframes slideInRight {
+        from {
+          transform: translate3d(100%, 0, 0);
+          opacity: 0;
+        }
+        to {
+          transform: translate3d(0, 0, 0);
+          opacity: 1;
+        }
+      }
+      @keyframes slideInLeft {
+        from {
+          transform: translate3d(-100%, 0, 0);
+          opacity: 0;
+        }
+        to {
+          transform: translate3d(0, 0, 0);
+          opacity: 1;
+        }
+      }
+
+      @keyframes userSlideInUp {
+        from {
+          opacity: 0;
+          transform: translate3d(20%, 20px, 0);
+        }
+        to {
+          opacity: 1;
+          transform: translate3d(0, 0, 0);
+        }
+      }
+      @keyframes botSlideInUp {
+        from {
+          opacity: 0;
+          transform: translate3d(-20%, 20px, 0);
+        }
+        to {
+          opacity: 1;
+          transform: translate3d(0, 0, 0);
+        }
+      }
+      .chat-bubble.animate--fadeInUp {
+        animation-name: fadeInUp;
+      }
+      .chat-bubble.animate--fadeInDown {
+        animation-name: fadeInDown;
+      }
+      .chat-bubble.animate--slideInRight {
+        animation-name: slideInRight;
+      }
+      .chat-bubble.animate--slideInLeft {
+        animation-name: slideInLeft;
+      }
+      .chat-bubble.animate--slideInUp {
+        animation-name: userSlideInUp;
+      }
+      .chat-bubble.animate--slideInDown {
+        animation-name: botSlideInUp;
+      }
+      .chat-bubble.user {
+        background-color: #007bff;
+        color: white;
+        align-self: flex-end;
+        float: right;
+        margin-right: 24px;
+      }
+      .chat-bubble.user:before {
+        content: "";
+        position: absolute;
+        right: -12px;
+        top: 12px;
+        border: 8px solid transparent;
+        border-left-color: #007bff;
+      }
+      .chat-bubble.bot {
+        background-color: white;
+        color: #333;
+        align-self: flex-start;
+        float: left;
+        margin-left: 24px;
+      }
+      .chat-bubble.bot:before {
+        content: "";
+        position: absolute;
+        left: -12px;
+        top: 12px;
+        border: 8px solid transparent;
+        border-right-color: white;
+      }
+      .chat-bubble-timestamp {
+        font-size: 0.85em;
+        color: #999;
+        text-align: right;
+      }
+      .chat-input-container {
+        display: flex;
+        padding: 12px;
+        background-color: #f5f5f5;
+        border: 1px solid #e0e0e0;
+        border-radius: 0 0 10px 10px;
+      }
+      .chat-input {
+        flex-grow: 1;
+        margin-right: 12px;
+        padding: 10px 14px;
+        border: 1px solid #ccc;
+        border-radius: 20px;
+      }
+      .chat-send-button {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 20px;
+        padding: 8px 16px;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Chat Bubble Conversation Demo</h1>
+    <div id="chatContainer"></div>
+    <div class="chat-input-container">
+      <input
+        type="text"
+        class="chat-input"
+        placeholder="Tapez votre message..."
+      />
+      <button class="chat-send-button">Envoyer</button>
+    </div>
+
+    <script src="../src/chat-bubble.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const baseDate = new Date(Date.now() - 10 * 60 * 1000);
+        const chatBubble = new ChatBubble({
+          container: document.getElementById("chatContainer"),
+          initialMessages: [
+            {
+              text: "Bonjour! Comment puis-je vous aider aujourd'hui ?",
+              sender: "bot",
+              timestamp: new Date(baseDate.getTime()),
+            },
+            {
+              text: "Je voudrais en savoir plus sur votre service de livraison.",
+              sender: "user",
+              timestamp: new Date(baseDate.getTime() + 30 * 1000),
+            },
+            {
+              text: "Bien sûr ! Nos livraisons sont gratuites pour toutes les commandes de plus de 50€. Elles sont effectuées sous 2-3 jours ouvrés.",
+              sender: "bot",
+              timestamp: new Date(baseDate.getTime() + 60 * 1000),
+            },
+            {
+              text: "C'est parfait, je vais passer commande alors. Merci !",
+              sender: "user",
+              timestamp: new Date(baseDate.getTime() + 90 * 1000),
+            },
+            {
+              text: "Je vous en prie, n'hésitez pas si vous avez d'autres questions !",
+              sender: "bot",
+              timestamp: new Date(baseDate.getTime() + 120 * 1000),
+            },
+          ],
+          delayPerMessage: 1500,
+          maxVisibleMessages: 50,
+          // Exemple de personnalisation des styles et animations
+          styles: {
+            container: "chat-bubble-container",
+            messageList: "chat-message-list",
+            bubble: "chat-bubble",
+            userBubble: "user",
+            botBubble: "bot",
+          },
+          animations: {
+            enabled: true,
+            //type: "slide", // 'fade' ou 'slide'
+            duration: 600,
+            // *** animate.css ***
+            userClass: "animate__animated animate__bounceInRight",
+            botClass: "animate__animated animate__bounceInLeft",
+            // userClass: "animate__animated animate__slideInUp",
+            // botClass: "animate__animated animate__slideInUp",
+            // *** custom ***
+            // userClass: "animate--slideInRight",
+            // botClass: "animate--slideInLeft",
+            // userClass: "animate--slideInUp",
+            // botClass: "animate--slideInDown",
+          },
+        });
+
+        const inputField = document.querySelector(".chat-input");
+        const sendButton = document.querySelector(".chat-send-button");
+
+        sendButton.addEventListener("click", () => {
+          const message = {
+            text: inputField.value,
+            sender: "user",
+            timestamp: new Date(),
+          };
+          chatBubble.addMessage(message);
+          inputField.value = "";
+        });
+
+        inputField.addEventListener("keypress", (e) => {
+          if (e.key === "Enter") {
+            sendButton.click();
+          }
+        });
+      });
+    </script>
+  </body>
+</html>
