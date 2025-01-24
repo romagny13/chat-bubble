@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Stateful Animated Chat</title>
+    <style>
+      body {
+        font-family: Arial;
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .chat-bubble-container {
+        border: 1px solid #ddd;
+        height: 500px;
+        overflow-y: auto;
+      }
+      .chat-bubble {
+        margin: 10px;
+        padding: 10px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+      }
+      .sender-name::after {
+        content: ":";
+        margin-right: 10px;
+      }
+
+      .user {
+        background-color: #e6f2ff;
+        margin-left: auto;
+      }
+      .bot {
+        background-color: #f0f0f0;
+      }
+      .chat-bubble img {
+        width: 150px;
+        height: 225px;
+        border-radius: 50%;
+        margin-right: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="chatContainer"></div>
+
+    <script src="../src/chat-bubble.js"></script>
+    <script>
+      const chatBubble = new ChatBubble({
+        container: document.getElementById("chatContainer"),
+        userName: "Alice",
+        botName: "Bob",
+        botStates: {
+          normal: "avatar1-normal.jpg",
+          talking: "avatar1-talking.jpg",
+          laughing: "avatar1-laughting.jpg",
+        },
+        userStates: {
+          normal: "avatar2-normal.jpg",
+          talking: "avatar2-talking.jpg",
+          laughing: "avatar2-laughting.jpg",
+        },
+        initialMessages: [
+          {
+            sender: "user",
+            text: "Hey Bob, I have a joke!",
+            state: "talking",
+          },
+        ],
+      });
+
+      setTimeout(() => {
+        chatBubble.addMessage({
+          sender: "bot",
+          text: "Oh really? Tell me!",
+          state: "normal",
+        });
+      }, 1000);
+
+      setTimeout(() => {
+        chatBubble.addMessage({
+          sender: "user",
+          text: "Why don't scientists trust atoms? Because they make up everything!",
+          state: "talking",
+        });
+      }, 2000);
+
+      setTimeout(() => {
+        chatBubble.addMessage({
+          sender: "bot",
+          text: "Haha, that's hilarious!",
+          state: "laughing",
+        });
+      }, 3000);
+    </script>
+  </body>
+</html>
