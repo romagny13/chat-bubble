@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ChatBubble Demo</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <style>
+        :root {
+            --bg-primary: #f4f4f4;
+            --bg-secondary: #ffffff;
+            --text-primary: #333;
+            --text-secondary: #666;
+            --accent-color: #3498db;
+            --user-bubble: #e6f2ff;
+            --bot-bubble: #f0f0f0;
+            --border-radius: 12px;
+        }
+
+        body {
+            font-family: 'Inter', Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            background-color: var(--bg-secondary);
+            padding: 15px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .controls button, .controls select {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .controls button:hover, .controls select:hover {
+            background-color: #2980b9;
+        }
+
+        #chatContainer {
+            height: 500px;
+            border: 1px solid #ddd;
+            background-color: var(--bg-secondary);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+        }
+
+        /* Chat Bubble Styles */
+        .chat-bubble-container {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 15px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--accent-color) #f1f1f1;
+        }
+
+        .chat-message-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .chat-bubble {
+            max-width: 80%;
+            padding: 12px 15px;
+            border-radius: var(--border-radius);
+            position: relative;
+            clear: both;
+        }
+
+        .chat-bubble.user {
+            align-self: flex-end;
+            background-color: var(--user-bubble);
+            margin-left: auto;
+        }
+
+        .chat-bubble.bot {
+            align-self: flex-start;
+            background-color: var(--bot-bubble);
+            margin-right: auto;
+        }
+
+        .sender-name {
+            font-weight: bold;
+            font-size: 0.8em;
+            color: var(--text-secondary);
+            margin-bottom: 5px;
+        }
+
+        .chat-bubble-timestamp {
+            font-size: 0.7em;
+            color: var(--text-secondary);
+            text-align: right;
+            margin-top: 5px;
+            opacity: 0.7;
+        }
+
+        /* Dark Mode */
+        .dark-mode {
+            --bg-primary: #121212;
+            --bg-secondary: #1e1e1e;
+            --text-primary: #e0e0e0;
+            --text-secondary: #a0a0a0;
+            --user-bubble: #2c3e50;
+            --bot-bubble: #2b2b2b;
+        }
+
+        /* Theme Variations */
+        .theme-modern {
+            --border-radius: 20px;
+            --accent-color: #9b59b6;
+        }
+
+        .theme-minimal {
+            --border-radius: 4px;
+            --accent-color: #34495e;
+        }
+
+        .message-input-container {
+            display: flex;
+            padding: 10px;
+            background-color: var(--bg-secondary);
+            border-top: 1px solid #ddd;
+        }
+
+        .message-input {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            margin-right: 10px;
+        }
+
+        .send-button {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+    </style>
+    </style>
+</head>
+<body>
+    <h1>ChatBubble Features Demo</h1>
+    
+    <div class="controls">
+        <button onclick="toggleDarkMode()">Toggle Dark Mode</button>
+        <select id="themeSelect" onchange="changeTheme()">
+            <option value="default">Default Theme</option>
+            <option value="modern">Modern Theme</option>
+            <option value="minimal">Minimal Theme</option>
+        </select>
+    </div>
+
+    <div id="chatContainer">
+        <div class="chat-bubble-container"></div>
+        <div class="message-input-container">
+            <input type="text" class="message-input" id="messageInput" placeholder="Type your message...">
+            <button class="send-button" onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script src="../src/chat-bubble.js"></script>
+    <script>
+        // Create ChatBubble instance
+        const chatBubble = new ChatBubble({
+            container: document.getElementById('chatContainer'),
+            userName: "User",
+            botName: "Assistant",
+            timestampFormat: "relative",
+            userImage: "https://api.dicebear.com/7.x/avataaars/svg?seed=user",
+            botImage: "https://api.dicebear.com/7.x/avataaars/svg?seed=bot",
+            animations: {
+                enabled: true,
+                messageEntryEffect: "fade"
+            }
+        });
+
+        // Demo helper functions
+        function addUserMessage() {
+            const messages = [
+                "Hello there!",
+                "Can you help me with something?",
+                "What's the weather like today?",
+                "I'm loving this chat interface!"
+            ];
+            chatBubble.addMessage({
+                sender: "user",
+                text: messages[Math.floor(Math.random() * messages.length)],
+                timestamp: new Date()
+            });
+        }
+
+        function addBotMessage() {
+            const messages = [
+                "Hi! How can I assist you today?",
+                "Sure, I'd be happy to help.",
+                "The weather looks great today!",
+                "This chat interface is quite versatile."
+            ];
+            chatBubble.addMessage({
+                sender: "bot",
+                text: messages[Math.floor(Math.random() * messages.length)],
+                timestamp: new Date()
+            });
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            
+            if (message) {
+                chatBubble.addMessage({
+                    sender: "user",
+                    text: message,
+                    timestamp: new Date()
+                });
+
+                // Simulate bot response
+                setTimeout(() => {
+                    chatBubble.addMessage({
+                        sender: "bot",
+                        text: `You said: ${message}`,
+                        timestamp: new Date()
+                    });
+                }, 500);
+
+                input.value = ''; // Clear input
+            }
+        }
+
+        function toggleDarkMode() {
+            const container = document.getElementById('chatContainer');
+            container.classList.toggle('dark-mode');
+        }
+
+        function changeTheme() {
+            const theme = document.getElementById('themeSelect').value;
+            const container = document.getElementById('chatContainer');
+            container.className = `theme-${theme}`;
+        }
+    </script>
+</body>
+</html>
