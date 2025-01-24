@@ -13,7 +13,7 @@ class ChatBubble {
       container: config.styles?.container || "chat-bubble-container",
       messageList: config.styles?.messageList || "chat-message-list",
       bubble: config.styles?.bubble || "chat-bubble",
-      text : config.styles?.text || "chat-text",
+      text: config.styles?.text || "chat-text",
       userBubble: config.styles?.userBubble || "user",
       botBubble: config.styles?.botBubble || "bot",
       timestamp: config.styles?.timestamp || "chat-bubble-timestamp",
@@ -84,16 +84,54 @@ class ChatBubble {
 `;
   }
 
+  // _renderMessages() {
+  //   this._messageList.innerHTML = "";
+
+  //   let delay = 0;
+  //   for (let index = 0; index < this._messages.length; index++) {
+  //     const msg = this._messages[index];
+  //     if (this._isRenderCancelled) {
+  //       this._isRenderCancelled = false;
+  //       break;
+  //     }
+  //     setTimeout(() => {
+  //       this._addMessageBubble(msg);
+  //     }, delay);
+  //     delay += this._delayPerMessage;
+  //   }
+
+  //   if (this._messages.length > this._maxVisibleMessages) {
+  //     this._messages = this._messages.slice(-this._maxVisibleMessages);
+  //   }
+  // }
+
   _renderMessages() {
     this._messageList.innerHTML = "";
 
+    // Stocke les identifiants des timers
+    this._timeoutIds = [];
     let delay = 0;
-    this._messages.slice(-this._maxVisibleMessages).forEach((msg) => {
-      setTimeout(() => {
+
+    for (let index = 0; index < this._messages.length; index++) {
+      const msg = this._messages[index];
+
+      if (this._isRenderCancelled) {
+        this._isRenderCancelled = false;
+
+        // Annule tous les timers en cours
+        this._timeoutIds.forEach((id) => clearTimeout(id));
+        this._timeoutIds = []; // Réinitialise la liste
+        return; // Quitte entièrement la méthode
+      }
+
+      // Planifie un timer pour l'ajout d'une bulle
+      const timeoutId = setTimeout(() => {
         this._addMessageBubble(msg);
       }, delay);
+      this._timeoutIds.push(timeoutId); // Enregistre l'identifiant
+
       delay += this._delayPerMessage;
-    });
+    }
 
     if (this._messages.length > this._maxVisibleMessages) {
       this._messages = this._messages.slice(-this._maxVisibleMessages);
@@ -192,5 +230,11 @@ ${timestamp}
   addMessage(message) {
     this._messages.push(message);
     this._renderNewMessage(message);
+  }
+
+  // Méthode pour rejouer l'animation
+  replayAnimation() {
+    this._isRenderCancelled = true;
+    this._renderMessages();
   }
 }
