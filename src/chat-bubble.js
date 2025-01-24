@@ -1,7 +1,7 @@
 class ChatBubble {
   constructor(config = {}) {
     // Default configuration
-    this.config = {
+    this._config = {
       userName: config.userName || "user",
       botName: config.botName || "bot",
       timestampFormat: config.timestampFormat || "time",
@@ -9,10 +9,11 @@ class ChatBubble {
     };
 
     // Styling options
-    this.styles = {
+    this._styles = {
       container: config.styles?.container || "chat-bubble-container",
       messageList: config.styles?.messageList || "chat-message-list",
       bubble: config.styles?.bubble || "chat-bubble",
+      text : config.styles?.text || "chat-text",
       userBubble: config.styles?.userBubble || "user",
       botBubble: config.styles?.botBubble || "bot",
       timestamp: config.styles?.timestamp || "chat-bubble-timestamp",
@@ -22,111 +23,108 @@ class ChatBubble {
     };
 
     // Animation configuration
-    this.animations = {
+    this._animations = {
       enabled: config.animations?.enabled !== false,
       userClass:
         config.animations?.userClass ||
         "animate__animated animate__fadeInRight",
       botClass:
-        config.animations?.botClass ||
-        "animate__animated animate__fadeInLeft",
+        config.animations?.botClass || "animate__animated animate__fadeInLeft",
     };
 
-    this.container = config.container || document.body;
+    this._container = config.container || document.body;
 
-    // New: Support for state-based images
-    this.userStates = config.userStates || {
+    this._userStates = config.userStates || {
       default: config.userImage || null,
     };
-    this.botStates = config.botStates || {
+    this._botStates = config.botStates || {
       default: config.botImage || null,
     };
 
-    // Modified to support initial messages with states
-    this.messages = (config.initialMessages || []).map((msg) => ({
+    this._messages = (config.initialMessages || []).map((msg) => ({
       ...msg,
       state: msg.state || "default",
     }));
 
-    this.delayPerMessage = config.delayPerMessage || 400;
-    this.maxVisibleMessages = config.maxVisibleMessages || 50;
+    this._delayPerMessage = config.delayPerMessage || 400;
+    this._maxVisibleMessages = config.maxVisibleMessages || 50;
 
     this._init();
   }
 
   _init() {
-    this.chatContainer = document.createElement("div");
-    this.chatContainer.className = this.styles.container;
-    this.container.appendChild(this.chatContainer);
+    this._chatContainer = document.createElement("div");
+    this._chatContainer.className = this._styles.container;
+    this._container.appendChild(this._chatContainer);
 
-    this.messageList = document.createElement("div");
-    this.messageList.className = this.styles.messageList;
-    this.chatContainer.appendChild(this.messageList);
+    this._messageList = document.createElement("div");
+    this._messageList.className = this._styles.messageList;
+    this._chatContainer.appendChild(this._messageList);
 
     this._renderMessages();
   }
 
   _getAnimationClass(sender) {
-    if (!this.animations.enabled) return "";
+    if (!this._animations.enabled) return "";
     return sender === "user"
-      ? this.animations.userClass
-      : this.animations.botClass;
+      ? this._animations.userClass
+      : this._animations.botClass;
   }
 
   _createImageContainer(sender, state) {
-    // Get image based on sender and state
-    const states = sender === "user" ? this.userStates : this.botStates;
+    const states = sender === "user" ? this._userStates : this._botStates;
     const imageSrc = states[state] || states["default"];
 
     if (!imageSrc) return "";
 
     return `
-<div class="${this.styles.imageContainer}">
+<div class="${this._styles.imageContainer}">
   <img src="${imageSrc}" alt="${sender} avatar" />
 </div>
 `;
   }
 
   _renderMessages() {
-    this.messageList.innerHTML = "";
+    this._messageList.innerHTML = "";
 
     let delay = 0;
-    this.messages.slice(-this.maxVisibleMessages).forEach((msg) => {
+    this._messages.slice(-this._maxVisibleMessages).forEach((msg) => {
       setTimeout(() => {
-        const bubble = this._createMessageBubble(msg);
-        this.messageList.appendChild(bubble);
-        this.messageList.scrollTop = this.messageList.scrollHeight;
+        this._addMessageBubble(msg);
       }, delay);
-      delay += this.delayPerMessage;
+      delay += this._delayPerMessage;
     });
 
-    if (this.messages.length > this.maxVisibleMessages) {
-      this.messages = this.messages.slice(-this.maxVisibleMessages);
+    if (this._messages.length > this._maxVisibleMessages) {
+      this._messages = this._messages.slice(-this._maxVisibleMessages);
     }
   }
 
   _renderNewMessage(message) {
-    const bubble = this._createMessageBubble(message);
-    this.messageList.appendChild(bubble);
-    this.messageList.scrollTop = this.messageList.scrollHeight;
+    this._addMessageBubble(message);
 
-    if (this.messages.length > this.maxVisibleMessages) {
-      this.messageList.removeChild(this.messageList.firstChild);
+    if (this._messages.length > this._maxVisibleMessages) {
+      this._messageList.removeChild(this._messageList.firstChild);
     }
+  }
+
+  _addMessageBubble(message) {
+    const bubble = this._createMessageBubble(message);
+    this._messageList.appendChild(bubble);
+    this._chatContainer.scrollTop = this._chatContainer.scrollHeight;
+    this._config.onMessageAdded?.(bubble);
   }
 
   _createMessageBubble(message) {
     const bubble = document.createElement("div");
-    bubble.className = `${this.styles.bubble} ${
+    bubble.className = `${this._styles.bubble} ${
       message.sender === "user"
-        ? this.styles.userBubble
-        : this.styles.botBubble
+        ? this._styles.userBubble
+        : this._styles.botBubble
     } ${this._getAnimationClass(message.sender)}`;
 
     const senderName =
-      message.sender === "user"
-        ? this.config.userName
-        : this.config.botName;
+      message.sender === "user" ? this._config.userName : this._config.botName;
 
     const imageContainer = this._createImageContainer(
       message.sender,
@@ -134,15 +132,15 @@ class ChatBubble {
     );
 
     const timestamp = message.timestamp
-      ? `<div class="${this.styles.timestamp}">${this._formatTimestamp(
+      ? `<div class="${this._styles.timestamp}">${this._formatTimestamp(
           message.timestamp
         )}</div>`
       : "";
 
     bubble.innerHTML = `
 ${imageContainer}
-<div class="${this.styles.senderName}">${senderName}</div>
-<div>${message.text}</div>
+<div class="${this._styles.senderName}">${senderName}</div>
+<div class="${this._styles.text}">${message.text}</div>
 ${timestamp}
 `;
 
@@ -152,7 +150,7 @@ ${timestamp}
   _formatTimestamp(timestamp) {
     const date = new Date(timestamp);
 
-    switch (this.config.timestampFormat) {
+    switch (this._config.timestampFormat) {
       case "datetime":
         return date.toLocaleString([], {
           year: "numeric",
@@ -192,7 +190,7 @@ ${timestamp}
   }
 
   addMessage(message) {
-    this.messages.push(message);
+    this._messages.push(message);
     this._renderNewMessage(message);
   }
 }
