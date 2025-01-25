@@ -96,7 +96,7 @@
             margin-right: auto;
         }
 
-        .sender-name {
+        .userId-name {
             font-weight: bold;
             font-size: 0.8em;
             color: var(--text-secondary);
@@ -182,11 +182,25 @@
         // Create ChatBubble instance
         const chatBubble = new ChatBubble({
             container: document.getElementById('chatContainer'),
-            userName: "User",
-            botName: "Assistant",
+            users: [
+            {
+              id: "bot",
+              name: "Assistant",
+              type: "bot",
+              images: {
+                default:  "https://api.dicebear.com/7.x/avataaars/svg?seed=bot",
+              },
+            },
+            {
+              id: "user",
+              name: "User",
+              type: "user",
+              images: {
+                default: "https://api.dicebear.com/7.x/avataaars/svg?seed=user8",
+              },
+            },
+          ],
             timestampFormat: "relative",
-            userImage: "https://api.dicebear.com/7.x/avataaars/svg?seed=user8",
-            botImage: "https://api.dicebear.com/7.x/avataaars/svg?seed=bot",
             animations: {
                 enabled: true,
                 messageEntryEffect: "fade"
@@ -202,7 +216,7 @@
                 "I'm loving this chat interface!"
             ];
             chatBubble.addMessage({
-                sender: "user",
+                userId: "user",
                 text: messages[Math.floor(Math.random() * messages.length)],
                 timestamp: new Date()
             });
@@ -216,7 +230,7 @@
                 "This chat interface is quite versatile."
             ];
             chatBubble.addMessage({
-                sender: "bot",
+                userId: "bot",
                 text: messages[Math.floor(Math.random() * messages.length)],
                 timestamp: new Date()
             });
@@ -228,7 +242,7 @@
             
             if (message) {
                 chatBubble.addMessage({
-                    sender: "user",
+                    userId: "user",
                     text: message,
                     timestamp: new Date()
                 });
@@ -236,7 +250,7 @@
                 // Simulate bot response
                 setTimeout(() => {
                     chatBubble.addMessage({
-                        sender: "bot",
+                        userId: "bot",
                         text: `You said: ${message}`,
                         timestamp: new Date()
                     });

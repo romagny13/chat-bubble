@@ -22,7 +22,7 @@
         display: flex;
         align-items: center;
       }
-      .sender-name::after {
+      .userId-name::after {
         content: ":";
         margin-right: 10px;
       }
@@ -49,21 +49,31 @@
     <script>
       const chatBubble = new ChatBubble({
         container: document.getElementById("chatContainer"),
-        userName: "Alice",
-        botName: "Bob",
-        botStates: {
-          normal: "avatar1-normal.jpg",
-          talking: "avatar1-talking.jpg",
-          laughing: "avatar1-laughting.jpg",
-        },
-        userStates: {
-          normal: "avatar2-normal.jpg",
-          talking: "avatar2-talking.jpg",
-          laughing: "avatar2-laughting.jpg",
-        },
+        users: [
+          {
+            id: "bot",
+            name: "Bob",
+            type: "bot",
+            images: {
+              normal: "avatar1-normal.jpg",
+              talking: "avatar1-talking.jpg",
+              laughing: "avatar1-laughting.jpg",
+            },
+          },
+          {
+            id: "user",
+            name: "Alice",
+            type: "user",
+            images: {
+              normal: "avatar2-normal.jpg",
+              talking: "avatar2-talking.jpg",
+              laughing: "avatar2-laughting.jpg",
+            },
+          },
+        ],
         initialMessages: [
           {
-            sender: "user",
+            userId: "user",
             text: "Hey Bob, I have a joke!",
             state: "talking",
           },
@@ -72,7 +82,7 @@
 
       setTimeout(() => {
         chatBubble.addMessage({
-          sender: "bot",
+          userId: "bot",
           text: "Oh really? Tell me!",
           state: "normal",
         });
@@ -80,7 +90,7 @@
 
       setTimeout(() => {
         chatBubble.addMessage({
-          sender: "user",
+          userId: "user",
           text: "Why don't scientists trust atoms? Because they make up everything!",
           state: "talking",
         });
@@ -88,7 +98,7 @@
 
       setTimeout(() => {
         chatBubble.addMessage({
-          sender: "bot",
+          userId: "bot",
           text: "Haha, that's hilarious!",
           state: "laughing",
         });

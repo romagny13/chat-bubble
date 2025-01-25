@@ -1,55 +1,142 @@
+class MessageQueue {
+  constructor(options = {}) {
+    this._config = {
+      delayPerMessage: options.delayPerMessage || 400,
+      onMessageProcess: options.onMessageProcess || (() => {}),
+      onQueueComplete: options.onQueueComplete || (() => {}),
+    };
+    this._queue = [];
+    this._isSkipDelayEnabled = false; // Renommée pour éviter la confusion
+    this._currentTimeout = null;
+    this._isRunning = false;
+  }
+
+  // Getter pour vérifier si la queue est en cours d'exécution
+  get isRunning() {
+    return this._isRunning;
+  }
+
+  async _start() {
+    if (this._isRunning) return;
+    this._isRunning = true;
+    this._processMessages();
+  }
+
+  async _processMessages() {
+    while (this._queue.length > 0) {
+      const message = this._queue.shift();
+      await this._processMessage(message);
+    }
+
+    this._isRunning = false;
+    this._config.onQueueComplete?.();
+  }
+
+  async _processMessage(message) {
+    return new Promise((resolve) => {
+      this._config.onMessageProcess?.(message);
+
+      // Utiliser le délai spécifique du message si défini, sinon utiliser le délai par défaut
+      const delay = message.delayPerMessage ?? this._config.delayPerMessage;
+
+      // Si le délai est <= 0 ou si skipDelay est activé, traiter immédiatement
+      if (this._isSkipDelayEnabled || delay <= 0) {
+        resolve();
+        return;
+      }
+
+      // Créer un setTimeout et sauvegarder la référence
+      this._currentTimeout = setTimeout(() => {
+        this._currentTimeout = null; // Nettoyer la référence une fois terminé
+        resolve();
+      }, delay);
+    });
+  }
+
+  add(message) {
+    this._queue.push(message);
+    if (!this._isRunning) {
+      this._start();
+    }
+  }
+
+  cancel() {
+    this._queue = [];
+    this._isRunning = false;
+    this._isSkipDelayEnabled = false;
+
+    if (this._currentTimeout) {
+      clearTimeout(this._currentTimeout);
+      this._currentTimeout = null;
+    }
+  }
+
+  skipDelay() {
+    this._isSkipDelayEnabled = true;
+    if (this._currentTimeout) {
+      clearTimeout(this._currentTimeout);
+      this._currentTimeout = null;
+    }
+
+    if (this._isRunning) {
+      this._processMessages();
+    }
+  }
+}
+
 class ChatBubble {
   constructor(config = {}) {
-    // Default configuration
+    // Ajouter le mode de personnage à la configuration
     this._config = {
-      userName: config.userName || "user",
-      botName: config.botName || "bot",
-      timestampFormat: config.timestampFormat || "time",
       ...config,
+      characterMode: config.characterMode || false,
+      users: config.users || [],
+      timestampFormat: config.timestampFormat || "time",
+      delayPerMessage: config.delayPerMessage || 400,
+      maxVisibleMessages: config.maxVisibleMessages || 50,
+      characterMode: config.characterMode || false,
+      hideBubbleImages: config.hideBubbleImages || false, // Nouvelle option
     };
 
-    // Styling options
+    // Autres configurations restent identiques
     this._styles = {
-      container: config.styles?.container || "chat-bubble-container",
-      messageList: config.styles?.messageList || "chat-message-list",
-      bubble: config.styles?.bubble || "chat-bubble",
-      text: config.styles?.text || "chat-text",
-      userBubble: config.styles?.userBubble || "user",
-      botBubble: config.styles?.botBubble || "bot",
-      timestamp: config.styles?.timestamp || "chat-bubble-timestamp",
-      senderName: config.styles?.senderName || "sender-name",
-      imageContainer:
-        config.styles?.imageContainer || "chat-bubble-image-container",
+      container: "chat-bubble-container",
+      messageList: "chat-message-list",
+      bubble: "chat-bubble",
+      text: "chat-text",
+      userBubble: "user",
+      botBubble: "bot",
+      timestamp: "chat-bubble-timestamp",
+      senderName: "sender-name",
+      imageContainer: "chat-bubble-image-container",
     };
 
-    // Animation configuration
     this._animations = {
       enabled: config.animations?.enabled !== false,
-      userClass:
-        config.animations?.userClass ||
-        "animate__animated animate__fadeInRight",
-      botClass:
-        config.animations?.botClass || "animate__animated animate__fadeInLeft",
+      userClass: "animate__animated animate__fadeInRight",
+      botClass: "animate__animated animate__fadeInLeft",
     };
 
     this._container = config.container || document.body;
-
-    this._userStates = config.userStates || {
-      default: config.userImage || null,
-    };
-    this._botStates = config.botStates || {
-      default: config.botImage || null,
-    };
-
     this._messages = (config.initialMessages || []).map((msg) => ({
       ...msg,
       state: msg.state || "default",
     }));
 
-    this._delayPerMessage = config.delayPerMessage || 400;
-    this._maxVisibleMessages = config.maxVisibleMessages || 50;
+    this._messageQueue = new MessageQueue({
+      delayPerMessage: this._config.delayPerMessage,
+      onMessageProcess: (message) => this._renderNewMessage(message),
+      onQueueComplete: () => this._config.onQueueComplete?.(),
+    });
 
     this._init();
+
+    // Mode personnage : créer des conteneurs de personnages
+    if (this._config.characterMode) {
+      this._createCharacterContainers();
+    }
+
+    this._messages.forEach((message) => this._messageQueue.add(message));
   }
 
   _init() {
@@ -60,114 +147,96 @@ class ChatBubble {
     this._messageList = document.createElement("div");
     this._messageList.className = this._styles.messageList;
     this._chatContainer.appendChild(this._messageList);
-
-    this._renderMessages();
   }
 
-  _getAnimationClass(sender) {
+  _getUser(userId) {
+    return this._config.users.find((user) => user.id === userId);
+  }
+
+  _getAnimationClass(type) {
     if (!this._animations.enabled) return "";
-    return sender === "user"
+    return type === "user"
       ? this._animations.userClass
       : this._animations.botClass;
   }
 
-  _createImageContainer(sender, state) {
-    const states = sender === "user" ? this._userStates : this._botStates;
-    const imageSrc = states[state] || states["default"];
+  _createImageContainer(userId, state) {
+    const user = this._getUser(userId);
+    if (!user) return "";
 
+    const imageSrc = user.images
+      ? user.images[state] || user.images["default"]
+      : null;
     if (!imageSrc) return "";
 
     return `
 <div class="${this._styles.imageContainer}">
-  <img src="${imageSrc}" alt="${sender} avatar" />
+<img src="${imageSrc}" alt="${user.name} avatar" />
 </div>
 `;
   }
 
-  // _renderMessages() {
-  //   this._messageList.innerHTML = "";
+  _createCharacterContainers() {
+    this._botCharacterContainer = document.createElement("div");
+    this._botCharacterContainer.className = "character-container bot-character";
+    this._userCharacterContainer = document.createElement("div");
+    this._userCharacterContainer.className =
+      "character-container user-character";
 
-  //   let delay = 0;
-  //   for (let index = 0; index < this._messages.length; index++) {
-  //     const msg = this._messages[index];
-  //     if (this._isRenderCancelled) {
-  //       this._isRenderCancelled = false;
-  //       break;
-  //     }
-  //     setTimeout(() => {
-  //       this._addMessageBubble(msg);
-  //     }, delay);
-  //     delay += this._delayPerMessage;
-  //   }
+    // Insérer les conteneurs avant et après la liste de messages
+    this._chatContainer.insertBefore(
+      this._botCharacterContainer,
+      this._messageList
+    );
+    this._chatContainer.appendChild(this._userCharacterContainer);
+  }
 
-  //   if (this._messages.length > this._maxVisibleMessages) {
-  //     this._messages = this._messages.slice(-this._maxVisibleMessages);
-  //   }
-  // }
+  _updateCharacterImages(message) {
+    if (!this._config.characterMode) return;
 
-  _renderMessages() {
-    this._messageList.innerHTML = "";
+    const user = this._getUser(message.userId);
+    const imageSrc = user.images[message.state] || user.images["default"];
 
-    // Stocke les identifiants des timers
-    this._timeoutIds = [];
-    let delay = 0;
+    const container =
+      user.type === "user"
+        ? this._userCharacterContainer
+        : this._botCharacterContainer;
 
-    for (let index = 0; index < this._messages.length; index++) {
-      const msg = this._messages[index];
-
-      if (this._isRenderCancelled) {
-        this._isRenderCancelled = false;
-
-        // Annule tous les timers en cours
-        this._timeoutIds.forEach((id) => clearTimeout(id));
-        this._timeoutIds = []; // Réinitialise la liste
-        return; // Quitte entièrement la méthode
-      }
-
-      // Planifie un timer pour l'ajout d'une bulle
-      const timeoutId = setTimeout(() => {
-        this._addMessageBubble(msg);
-      }, delay);
-      this._timeoutIds.push(timeoutId); // Enregistre l'identifiant
-
-      delay += this._delayPerMessage;
-    }
-
-    if (this._messages.length > this._maxVisibleMessages) {
-      this._messages = this._messages.slice(-this._maxVisibleMessages);
-    }
+    container.innerHTML = `<img src="${imageSrc}" alt="${user.name} character">`;
   }
 
   _renderNewMessage(message) {
-    this._addMessageBubble(message);
-
-    if (this._messages.length > this._maxVisibleMessages) {
-      this._messageList.removeChild(this._messageList.firstChild);
-    }
-  }
-
-  _addMessageBubble(message) {
+    this._updateCharacterImages(message);
     const bubble = this._createMessageBubble(message);
     this._messageList.appendChild(bubble);
-    this._chatContainer.scrollTop = this._chatContainer.scrollHeight;
+
+    if (this._messageList.children.length > this._config.maxVisibleMessages) {
+      this._messageList.removeChild(this._messageList.firstChild);
+    }
+
+    const scrollContainer = this._config.characterMode ? this._messageList : this._chatContainer;
+    scrollContainer.scrollTo({
+      top: scrollContainer.scrollHeight,
+      behavior: "smooth",
+    });
     this._config.onMessageAdded?.(bubble);
   }
 
   _createMessageBubble(message) {
+    const user = this._getUser(message.userId);
+    if (!user) {
+      throw new Error(`User with userId "${message.userId}" not found.`);
+    }
+
     const bubble = document.createElement("div");
     bubble.className = `${this._styles.bubble} ${
-      message.sender === "user"
-        ? this._styles.userBubble
-        : this._styles.botBubble
-    } ${this._getAnimationClass(message.sender)}`;
+      user.type === "user" ? this._styles.userBubble : this._styles.botBubble
+    } ${this._getAnimationClass(user.type)}`;
 
-    const senderName =
-      message.sender === "user" ? this._config.userName : this._config.botName;
-
-    const imageContainer = this._createImageContainer(
-      message.sender,
-      message.state
-    );
+    // Modifier la création de l'image
+    const imageContainer = this._config.hideBubbleImages
+      ? ""
+      : this._createImageContainer(message.userId, message.state);
 
     const timestamp = message.timestamp
       ? `<div class="${this._styles.timestamp}">${this._formatTimestamp(
@@ -175,12 +244,10 @@ class ChatBubble {
         )}</div>`
       : "";
 
-    bubble.innerHTML = `
-${imageContainer}
-<div class="${this._styles.senderName}">${senderName}</div>
-<div class="${this._styles.text}">${message.text}</div>
-${timestamp}
-`;
+    bubble.innerHTML = `${imageContainer}
+    <div class="${this._styles.senderName}">${user.name}</div>
+    <div class="${this._styles.text}">${message.text}</div>
+    ${timestamp}`;
 
     return bubble;
   }
@@ -229,12 +296,21 @@ ${timestamp}
 
   addMessage(message) {
     this._messages.push(message);
-    this._renderNewMessage(message);
+    this._messageQueue.add(message);
   }
 
-  // Méthode pour rejouer l'animation
-  replayAnimation() {
-    this._isRenderCancelled = true;
-    this._renderMessages();
+  cancelMessages() {
+    this._messageQueue.cancel();
+    this._messageList.innerHTML = "";
+  }
+
+  replayMessages() {
+    this.cancelMessages();
+    this._messageQueue._defaultDelay = this._config.delayPerMessage;
+    this._messages.forEach((message) => this._messageQueue.add(message));
+  }
+
+  skipDelay() {
+    this._messageQueue.skipDelay();
   }
 }

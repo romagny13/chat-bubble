@@ -68,7 +68,7 @@
         flex-direction: column;
       }
 
-      .chat-bubble .sender-name {
+      .chat-bubble .userId-name {
         font-weight: 600;
         margin-bottom: 5px;
         color: var(--primary-color);
@@ -91,7 +91,7 @@
         border-bottom-right-radius: 0;
       }
 
-      .chat-bubble.user .sender-name {
+      .chat-bubble.user .userId-name {
         color: white;
         opacity: 0.8;
       }
@@ -158,14 +158,14 @@
       .chat-send-button:hover {
         background-color: #2980b9;
       }
-      .chat-bubble .sender-name {
+      .chat-bubble .userId-name {
         font-weight: 600;
         margin-bottom: 5px;
         color: var(--primary-color);
         font-size: 0.9em;
       }
 
-      .chat-bubble.user .sender-name {
+      .chat-bubble.user .userId-name {
         color: white;
         opacity: 0.8;
       }
@@ -191,32 +191,44 @@
         const baseDate = new Date(Date.now() - 10 * 60 * 1000);
         const chatBubble = new ChatBubble({
           container: document.getElementById("chatContainer"),
-          userName: "Alice Thompson",
-          botName: "Emma - Support Team",
-          userImage: "https://randomuser.me/api/portraits/women/79.jpg",
-          botImage: "https://randomuser.me/api/portraits/women/67.jpg",
-          // userImage: "avatar-1.jpg",
-          // botImage: "avatar-2.jpg",
-          timestampFormat: 'relative',
+          users: [
+            {
+              id: "bot",
+              name: "Emma - Support Team",
+              type: "bot",
+              images: {
+                default: "https://randomuser.me/api/portraits/women/67.jpg",
+              },
+            },
+            {
+              id: "user",
+              name: "Alice Thompson",
+              type: "user",
+              images: {
+                default: "https://randomuser.me/api/portraits/women/79.jpg",
+              },
+            },
+          ],
+          timestampFormat: "relative",
           initialMessages: [
             {
               text: "Hello! How can I assist you with your recent order today?",
-              sender: "bot",
+              userId: "bot",
               timestamp: new Date(baseDate.getTime()),
             },
             {
               text: "I'm interested in understanding the delivery options for my recent purchase.",
-              sender: "user",
+              userId: "user",
               timestamp: new Date(baseDate.getTime() + 30 * 1000),
             },
             {
               text: "We offer free shipping for orders over $50, with delivery typically taking 2-3 business days. Would you like more details?",
-              sender: "bot",
+              userId: "bot",
               timestamp: new Date(baseDate.getTime() + 60 * 1000),
             },
             {
               text: "That sounds perfect. I'll proceed with my order. Thank you!",
-              sender: "user",
+              userId: "user",
               timestamp: new Date(baseDate.getTime() + 90 * 1000),
             },
           ],
@@ -236,7 +248,7 @@
           if (messageText) {
             const message = {
               text: messageText,
-              sender: "user",
+              userId: "user",
               timestamp: new Date(),
             };
             chatBubble.addMessage(message);

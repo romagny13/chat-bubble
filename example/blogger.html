@@ -10,77 +10,6 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
     />
-    <!-- <style>
-      .chat-bubble-container {
-        border: 1px solid #ddd;
-        height: 500px; /* Garde la hauteur comme tu veux */
-        overflow-y: auto; /* Permet le défilement */
-        padding: 15px;
-        background-color: #f9f9f9;
-        display: flex;
-        flex-direction: column;
-      }
-
-      .chat-message-list {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-      }
-
-      .chat-bubble {
-        margin: 10px;
-        padding: 15px;
-        border-radius: 15px;
-        display: flex;
-        align-items: flex-start;
-        max-width: 80%;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-      }
-
-      .sender-name {
-        font-weight: bold;
-        margin-right: 10px;
-        white-space: nowrap;
-      }
-
-      .sender-name::after {
-        content: ":";
-        margin-right: 10px;
-      }
-
-      .user {
-        background-color: #fdecf0; /* Rose ultra-léger */
-        margin-left: auto;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-      }
-
-      .bot {
-        background-color: #e6f2ff;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-      }
-
-      .chat-bubble img {
-        width: 100px; /* 300x450 */
-        height: 150px;
-        border-radius: 50%;
-        margin-right: 15px;
-      }
-
-      .chat-bubble div {
-        flex-grow: 1;
-      }
-
-      .chat-bubble-container .chat-message-list {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-      }
-    </style> -->
-
     <link
       href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap"
       rel="stylesheet"
@@ -189,19 +118,19 @@
 
       /* Style des avatars - Gardé comme demandé */
       /* .chat-bubble img {
-            width: 100px;
-            height: 150px;
-            border-radius: 50%;
-            margin-right: 15px;
-            object-fit: cover;
-            border: 3px solid #fff;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            transition: transform 0.3s ease;
-          }
+        width: 100px;
+        height: 150px;
+        border-radius: 50%;
+        margin-right: 15px;
+        object-fit: cover;
+        border: 3px solid #fff;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        transition: transform 0.3s ease;
+      }
 
-          .chat-bubble:hover img {
-            transform: scale(1.05);
-          } */
+      .chat-bubble:hover img {
+        transform: scale(1.05);
+      } */
 
       .chat-bubble img {
         width: 120px;
@@ -266,40 +195,44 @@
           padding: 12px;
         }
       }
-
-      .replay-btn {
-        background-color: var(--primary-color);
-        color: white;
-        border: none;
-        padding: 10px 20px;
-        border-radius: 8px;
-        font-size: 16px;
-        cursor: pointer;
-        transition: var(--transition);
-        box-shadow: var(--shadow);
-        text-transform: uppercase;
-      }
-
-      .replay-btn:hover {
-        background-color: var(--secondary-color);
-        transform: translateY(-2px);
-        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
-      }
     </style>
-
-    <button class="replay-btn" onclick="chat.replayAnimation()">
-      ▶️ Replay Animation
-    </button>
 
     <div id="ghostChat"></div>
 
     <script src="../src/chat-bubble.js"></script>
     <script>
-      const chat = new ChatBubble({
+      new ChatBubble({
         container: document.getElementById("ghostChat"),
         delayPerMessage: 4000,
-        userName: "Monique",
-        botName: "Jean-Bernard",
+        users: [
+          {
+            id: "bot",
+            name: "Jean-Bernard",
+            type: "bot",
+            images: {
+              normal:
+                "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgpRagLgWHN2gWMX83K7cMSP8fPRJpkXOPVxiJjPid1jGIGmr55v0oEfxbasVkO5QuDVWWAmAgKOP0QS51pqJDtlvFmqlU5xbEIVTTCSpjv3y1rZbkLb7FdQOeQCu1pBEdTTBO8qKWNBTgrkfXACLsWI1e8pRkv0ORpaweWw0-gUpqQ2e6dP5xLsUqHZXhF/s1600/avatar1-normal.jpg",
+              talking:
+                "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgA-bfwtXlAn79Z9jy72DvsabfQiWFLdnKJZ0MsaHhskYhgTrUBt4Wup9TxJhN8-CgiNnt8lVkg-JBz0wjiaKhdm0-v09jNTYO1F7-pbChSJ0Uq9i4XlgNNtv0Iw655-IYjYr-RxbjFdq6XyGrex4uKWU-yL8XIwD0s_kAtwJlYKJrehS5pVxkn5bJ0bNs6/s1600/avatar1-talking.jpg",
+              laughting:
+                "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgBkYGJghOTldELYDgIgzFHQkc7EQC7_jufyFCnrFkb25wMFVghnNiKBU9R_tVUu4NJCNhz3UyXYI0P8zo-VatibQzg_9OYX-VGPlEMHMlI9S3VH6THKVdyPbejWPmAESWWPHWes4x09yBNpqwIyHxfebNdNfUPJj5px6DL_lrY3lqG74aRkseE1w4RlPgP/s1600/avatar1-laughting.jpg",
+            },
+          },
+          {
+            id: "user",
+            name: "Monique",
+            type: "user",
+            images: {
+              normal:
+                "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEg2Lh1S3p64_4RqqKMwhjg5g-YT8jZ87kRAaNhiBf3Vs3bG0gqFFbEv49MUQaoBUUN_f_Svf3ZjiryfjzCqCKuQz8jz_DLfiwcHNQBQxFjmg2Q2DaYPCV61hzMXL6iXg7y2OVnFT9zSgh6kCe1R6Z52NwN03SX_funaDtzF_S_9D6GHDkn-GHHwdrf4Is5Z/s1600/avatar2-normal.jpg",
+              talking:
+                "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgWeuIkapUWZnC-isWDTn56kIX2JJBw_77bWpsunsnl7ubHJc9n7yxCn2d2vj35oC94cyGc4QFFSlLGwOWslYSUHlcqTj6z0qoCjf5_5OiZZ5XjxfFUxAnQADh-0VgvZue9qUTwCU_jnMM2FW_uTjmpGE7JuP8jJll4Pa-2ob0U7YvNLj8j3YgTLF_rBv3i/s1600/avatar2-talking.jpg",
+              laughting:
+                "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj_dbxiwp0sj2W3KSBdFdlIK7C-Y5154IX1Ue7_7MsDKq6OWGWUzyrbYMvt_akvDDjV8SCYdB-s2o0_DJoP06yZRNttY3y4ia8feNQhZitJdh7R5Lkgl16cJTiHbqaK_nTjfnBv4RW856s0gUkGUfMwo-8FR8v1kyKtMpjrb3HRQ5kEw9rTryiiHITD08kM/s1600/avatar2-laughting.jpg",
+              wink: "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiUkXOYtW_BKOfRpvgoYByDR8VXsESgVR_VhjCfWw_g8cURo5ZNuKpf4oH8_eq54coBA538r75lJF-2vF5OL6vTWIGcrxencOzvgsFg6I3EyYaS97bYs_4ce20jGW_MGFo_4BsE-8JwKyRwm1JeNNdp2v04xDZ59Ra4Wga4yES9H-vHzjixC5sJHgl7yjzZ/s1600/avatar2-wink.jpg",
+            },
+          },
+        ],
         animations: {
           enabled: true,
           //type: "slide", // 'fade' ou 'slide'
@@ -308,108 +241,91 @@
           userClass: "popin",
           botClass: "popin",
         },
-        botStates: {
-          normal:
-            "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgpRagLgWHN2gWMX83K7cMSP8fPRJpkXOPVxiJjPid1jGIGmr55v0oEfxbasVkO5QuDVWWAmAgKOP0QS51pqJDtlvFmqlU5xbEIVTTCSpjv3y1rZbkLb7FdQOeQCu1pBEdTTBO8qKWNBTgrkfXACLsWI1e8pRkv0ORpaweWw0-gUpqQ2e6dP5xLsUqHZXhF/s1600/avatar1-normal.jpg",
-          talking:
-            "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgA-bfwtXlAn79Z9jy72DvsabfQiWFLdnKJZ0MsaHhskYhgTrUBt4Wup9TxJhN8-CgiNnt8lVkg-JBz0wjiaKhdm0-v09jNTYO1F7-pbChSJ0Uq9i4XlgNNtv0Iw655-IYjYr-RxbjFdq6XyGrex4uKWU-yL8XIwD0s_kAtwJlYKJrehS5pVxkn5bJ0bNs6/s1600/avatar1-talking.jpg",
-          laughting:
-            "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgBkYGJghOTldELYDgIgzFHQkc7EQC7_jufyFCnrFkb25wMFVghnNiKBU9R_tVUu4NJCNhz3UyXYI0P8zo-VatibQzg_9OYX-VGPlEMHMlI9S3VH6THKVdyPbejWPmAESWWPHWes4x09yBNpqwIyHxfebNdNfUPJj5px6DL_lrY3lqG74aRkseE1w4RlPgP/s1600/avatar1-laughting.jpg",
-        },
-        userStates: {
-          normal:
-            "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEg2Lh1S3p64_4RqqKMwhjg5g-YT8jZ87kRAaNhiBf3Vs3bG0gqFFbEv49MUQaoBUUN_f_Svf3ZjiryfjzCqCKuQz8jz_DLfiwcHNQBQxFjmg2Q2DaYPCV61hzMXL6iXg7y2OVnFT9zSgh6kCe1R6Z52NwN03SX_funaDtzF_S_9D6GHDkn-GHHwdrf4Is5Z/s1600/avatar2-normal.jpg",
-          talking:
-            "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgWeuIkapUWZnC-isWDTn56kIX2JJBw_77bWpsunsnl7ubHJc9n7yxCn2d2vj35oC94cyGc4QFFSlLGwOWslYSUHlcqTj6z0qoCjf5_5OiZZ5XjxfFUxAnQADh-0VgvZue9qUTwCU_jnMM2FW_uTjmpGE7JuP8jJll4Pa-2ob0U7YvNLj8j3YgTLF_rBv3i/s1600/avatar2-talking.jpg",
-          laughting:
-            "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj_dbxiwp0sj2W3KSBdFdlIK7C-Y5154IX1Ue7_7MsDKq6OWGWUzyrbYMvt_akvDDjV8SCYdB-s2o0_DJoP06yZRNttY3y4ia8feNQhZitJdh7R5Lkgl16cJTiHbqaK_nTjfnBv4RW856s0gUkGUfMwo-8FR8v1kyKtMpjrb3HRQ5kEw9rTryiiHITD08kM/s1600/avatar2-laughting.jpg",
-          wink: "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiUkXOYtW_BKOfRpvgoYByDR8VXsESgVR_VhjCfWw_g8cURo5ZNuKpf4oH8_eq54coBA538r75lJF-2vF5OL6vTWIGcrxencOzvgsFg6I3EyYaS97bYs_4ce20jGW_MGFo_4BsE-8JwKyRwm1JeNNdp2v04xDZ59Ra4Wga4yES9H-vHzjixC5sJHgl7yjzZ/s1600/avatar2-wink.jpg",
-        },
         initialMessages: [
           {
-            sender: "bot",
+            userId: "bot",
             text: "Eh Monique! Tu es bête et tu me rends dingue avec ta Ginette 😤. Si tu rigoles pas à mes blagues, j’appuie sur le bouton ghost. 👻",
             state: "talking",
           },
           {
-            sender: "user",
+            userId: "user",
             text: "Comment ça? T’es vraiment là ou t’as pris un congé cérébral ? 😆",
             state: "laughting",
           },
           {
-            sender: "bot",
+            userId: "bot",
             text: "Ghoster, c’est comme un plat réchauffé : ça finit toujours par laisser un goût amer. 🍲❌",
             state: "talking",
           },
           {
-            sender: "user",
+            userId: "user",
             text: "Hum ? 🤔",
             state: "normal",
           },
           {
-            sender: "bot",
+            userId: "bot",
             text: "Ghoster, c’est comme un grille-pain dans le désert : tu chauffes les espoirs pour rien et, au final, tout le monde crame. 🏜️🔥🍞",
             state: "talking",
           },
           {
-            sender: "user",
+            userId: "user",
             text: "Ah ouais, c’est presque marrant... presque. 🤔",
             state: "talking",
           },
           {
-            sender: "bot",
+            userId: "bot",
             text: "Si tu ghostes, prépare-toi à être haunté par ta conscience. 👻🧠",
             state: "talking",
           },
           {
-            sender: "user",
+            userId: "user",
             text: "Haha, la conscience de quoi ? Parce que là, je suis paumé ! 🤯",
             state: "normal",
           },
           {
-            sender: "bot",
+            userId: "bot",
             text: "À force de ghoster, tu finiras seul dans ton château hanté. 🏰👻",
             state: "laughting",
           },
           {
-            sender: "user",
+            userId: "user",
             text: "Tu veux dire un club de mes ex en mode fantômes ? Omg, ça va être un vrai convoi spectral ! 👻",
             state: "talking",
           },
           {
-            sender: "bot",
+            userId: "bot",
             text: "Ghoster, c’est l’art de la fuite sans le diplôme. 🎓🚪💨",
             state: "laughting",
           },
           {
-            sender: "user",
+            userId: "user",
             text: "C’est pour moi? J’ai une maîtrise en bêtises ! 🤓",
             state: "wink",
           },
           {
-            sender: "bot",
+            userId: "bot",
             text: "Ghoster, c’est comme servir des croquettes pour chien à un chat : tu finiras par être ignoré et c’est pas vraiment une surprise. 🐱❌🍖",
             state: "laughting",
           },
           {
-            sender: "user",
+            userId: "user",
             text: "Miaou! 🐈👅",
             state: "laughting",
           },
           ,
           {
-            sender: "bot",
+            userId: "bot",
             text: "Ghoster, c’est comme une fête sans musique : c’est juste du silence. 🎉🔇",
             state: "laughting",
           },
           {
-            sender: "user",
+            userId: "user",
             text: "Tu as raison une musique sans musique, c'est con! C'est moi qui vais te ghoster... ou plutôt te reghoster ! 😏",
             state: "laughting",
           },
         ],
         onMessageAdded: (bubble) => {
-          //   console.log(bubble);
+          console.log(bubble);
           // Attendre que le message soit ajouté avant de faire défiler
           //   setTimeout(() => {
           //     const container = document.querySelector(".chat-bubble-container");
