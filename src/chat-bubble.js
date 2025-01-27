@@ -219,10 +219,9 @@ class ChatBubble {
       ? this._messageList
       : this._chatContainer;
 
-    const lastMessage = scrollContainer.lastChild;
-    lastMessage.scrollIntoView({
-      behavior: "smooth",
-      block: "end"
+    scrollContainer.scrollTo({
+      top: scrollContainer.scrollHeight,
+      behavior: "smooth"
     });
     this._config.onMessageAdded?.(bubble);
   }
