@@ -30,7 +30,7 @@ class MessageQueue {
     while (this._queue.length > 0 && !this._isPaused) {
       const message = this._queue.shift();
       await this._processMessage(message);
-      if (message.pauseAfter) {
+      if (message.pauseAfter && !this._isPauseAfterIgnored) {
         // Utilisation de pauseAfter
         this.pause();
         return;
@@ -66,6 +66,14 @@ class MessageQueue {
       clearTimeout(this._currentTimeout);
       this._currentTimeout = null;
     }
+  }
+
+  disablePauseAfter() {
+    this._isPauseAfterIgnored = true;
+  }
+
+  enablePauseAfter() {
+    this._isPauseAfterIgnored = false;
   }
 
   add(message) {
@@ -163,7 +171,7 @@ class TimestampFormatterService {
 
 class ChatBubble {
   constructor(config = {}) {
-    this.version = "2.5.0";
+    this.version = "2.6.0";
 
     const defaultTextFormatter = new TextFormatterService();
     const defaultTimestampFormatter = new TimestampFormatterService();
@@ -355,6 +363,14 @@ class ChatBubble {
   cancelMessages() {
     this._messageQueue.cancel();
     this._messageList.innerHTML = "";
+  }
+
+  disablePauseAfter() {
+    this._messageQueue.disablePauseAfter();
+  }
+
+  enablePauseAfter() {
+    this._messageQueue.enablePauseAfter();
   }
 
   replayMessages() {
