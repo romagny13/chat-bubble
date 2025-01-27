@@ -3,17 +3,19 @@ class MessageQueue {
     this._config = {
       delayPerMessage: options.delayPerMessage || 400,
       onMessageProcess: options.onMessageProcess || (() => {}),
-      onQueueComplete: options.onQueueComplete || (() => {})
+      onPause: options.onPause || (() => {}),
+      onQueueComplete: options.onQueueComplete || (() => {}),
+      autoplay: options.autoplay ?? true // Lecture automatique activée par défaut
     };
     this._queue = [];
-    this._isSkipDelayEnabled = false; // Renommée pour éviter la confusion
+    this._isPaused = !this._config.autoplay; // Si autoplay est false, démarre en pause
+    this._isSkipDelayEnabled = false;
     this._currentTimeout = null;
     this._isRunning = false;
   }
 
-  // Getter pour vérifier si la queue est en cours d'exécution
   get isRunning() {
-    return this._isRunning;
+    return this._isRunning && !this._isPaused;
   }
 
   async _start() {
@@ -23,31 +25,32 @@ class MessageQueue {
   }
 
   async _processMessages() {
-    while (this._queue.length > 0) {
+    if (this._isPaused) return;
+
+    while (this._queue.length > 0 && !this._isPaused) {
       const message = this._queue.shift();
       await this._processMessage(message);
     }
 
-    this._isRunning = false;
-    this._config.onQueueComplete?.();
+    // Si la queue est vide ou pause, arrête le process
+    this._isRunning = this._queue.length > 0;
+    if (!this._isRunning && !this._isPaused) {
+      this._config.onQueueComplete?.();
+    }
   }
 
   async _processMessage(message) {
     return new Promise((resolve) => {
       this._config.onMessageProcess?.(message);
 
-      // Utiliser le délai spécifique du message si défini, sinon utiliser le délai par défaut
       const delay = message.delayPerMessage ?? this._config.delayPerMessage;
-
-      // Si le délai est <= 0 ou si skipDelay est activé, traiter immédiatement
       if (this._isSkipDelayEnabled || delay <= 0) {
         resolve();
         return;
       }
 
-      // Créer un setTimeout et sauvegarder la référence
       this._currentTimeout = setTimeout(() => {
-        this._currentTimeout = null; // Nettoyer la référence une fois terminé
+        this._currentTimeout = null;
         resolve();
       }, delay);
     });
@@ -55,7 +58,7 @@ class MessageQueue {
 
   add(message) {
     this._queue.push(message);
-    if (!this._isRunning) {
+    if (!this._isRunning && !this._isPaused) {
       this._start();
     }
   }
@@ -63,43 +66,57 @@ class MessageQueue {
   cancel() {
     this._queue = [];
     this._isRunning = false;
+    this._isPaused = false;
     this._isSkipDelayEnabled = false;
 
-    if (this._currentTimeout) {
-      clearTimeout(this._currentTimeout);
-      this._currentTimeout = null;
-    }
+    this._clearCurrentTimeout();
   }
 
   skipDelay() {
     this._isSkipDelayEnabled = true;
-    if (this._currentTimeout) {
-      clearTimeout(this._currentTimeout);
-      this._currentTimeout = null;
-    }
+    this._clearCurrentTimeout();
 
     if (this._isRunning) {
       this._processMessages();
     }
   }
+
+  _clearCurrentTimeout() {
+    if (this._currentTimeout) {
+      clearTimeout(this._currentTimeout);
+      this._currentTimeout = null;
+    }
+  }
+
+  pause() {
+    this._isPaused = true;
+    this._clearCurrentTimeout();
+    this._config.onPause?.();
+  }
+
+  resume() {
+    if (!this._isPaused) return;
+    this._isPaused = false;
+    this._processMessages();
+  }
 }
 
 class ChatBubble {
   constructor(config = {}) {
-    this.version = "2.3.0";
-    // Ajouter le mode de personnage à la configuration
+    this.version = "2.4.0";
+
     this._config = {
       ...config,
-      characterMode: config.characterMode || false,
       users: config.users || [],
+      autoplay: config.autoplay ?? true, // Lecture automatique activée par défaut
+      onPause: config.onPause,
       timestampFormat: config.timestampFormat || "time",
       delayPerMessage: config.delayPerMessage || 400,
       maxVisibleMessages: config.maxVisibleMessages || 50,
       characterMode: config.characterMode || false,
-      hideBubbleImages: config.hideBubbleImages || false // Nouvelle option
+      hideBubbleImages: config.hideBubbleImages || false
     };
 
-    // Autres configurations restent identiques
     this._styles = {
       container: "chat-bubble-container",
       messageList: "chat-message-list",
@@ -126,7 +143,9 @@ class ChatBubble {
 
     this._messageQueue = new MessageQueue({
       delayPerMessage: this._config.delayPerMessage,
+      autoplay: this._config.autoplay,
       onMessageProcess: (message) => this._renderNewMessage(message),
+      onPause: () => this._config.onPause?.(),
       onQueueComplete: () => this._config.onQueueComplete?.()
     });
 
@@ -171,10 +190,10 @@ class ChatBubble {
     if (!imageSrc) return "";
 
     return `
-<div class="${this._styles.imageContainer}">
-<img src="${imageSrc}" alt="${user.name} avatar" />
-</div>
-`;
+  <div class="${this._styles.imageContainer}">
+  <img src="${imageSrc}" alt="${user.name} avatar" />
+  </div>
+  `;
   }
 
   _createCharacterContainers() {
@@ -268,9 +287,9 @@ class ChatBubble {
     const formattedText = this._formatText(message.text);
 
     bubble.innerHTML = `${imageContainer}
-    <div class="${this._styles.senderName}">${user.name}</div>
-    <div class="${this._styles.text}">${formattedText}</div>
-    ${timestamp}`;
+      <div class="${this._styles.senderName}">${user.name}</div>
+      <div class="${this._styles.text}">${formattedText}</div>
+      ${timestamp}`;
 
     return bubble;
   }
@@ -335,5 +354,13 @@ class ChatBubble {
 
   skipDelay() {
     this._messageQueue.skipDelay();
+  }
+
+  pauseMessages() {
+    this._messageQueue.pause();
+  }
+
+  resumeMessages() {
+    this._messageQueue.resume();
   }
 }
