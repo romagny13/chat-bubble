@@ -86,7 +86,7 @@ class MessageQueue {
 
 class ChatBubble {
   constructor(config = {}) {
-    this.version = "2.1.0";
+    this.version = "2.3.0";
     // Ajouter le mode de personnage à la configuration
     this._config = {
       ...config,
