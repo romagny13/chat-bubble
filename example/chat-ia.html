@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <!DOCTYPE html>
+    <html lang="fr">
+      <head>
+        <meta charset="UTF-8" />
+        <title>Discussion ChatGPT</title>
+        <link
+          href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
+          rel="stylesheet"
+        />
+        <style>
+          body {
+            font-family: "Arial", sans-serif;
+            background-color: #2e2e2e;
+            color: #d1d1d1;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+          }
+
+          .chat-bubble-container {
+            width: 800px;
+            height: 600px;
+            background-color: #1a1a1a;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            display: flex;
+            overflow: hidden;
+          }
+
+          .character-container {
+            width: 250px;
+            background-color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: background-color 0.3s ease;
+          }
+
+          .character-container img {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            object-fit: cover;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6); /* Ombre pour donner un effet de profondeur */
+          }
+
+          .chat-message-list {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 20px;
+          }
+
+          .chat-bubble {
+            max-width: 70%;
+            margin: 15px 0;
+            padding: 15px;
+          }
+
+          .chat-bubble.user {
+            background-color: #3a86ff;
+            color: white;
+            float: right;
+            text-align: right;
+            border-radius: 25px 25px 0 25px;
+          }
+
+          .chat-bubble.bot {
+            background-color: #444;
+            color: white;
+            float: left;
+            text-align: left;
+            border-radius: 25px 25px 25px 0;
+          }
+
+          .sender-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+          }
+
+          .chat-bubble-image-container {
+            width: 80px;
+            margin-bottom: 15px;
+          }
+
+          .chat-bubble-image-container img {
+            max-width: 100%;
+            border-radius: 50%;
+            border: 4px solid #444; /* Bordure subtile pour contraster avec le fond sombre */
+            margin: 0 5px;
+          }
+
+          .chat-bubble p {
+            margin: 0;
+          }
+
+          /* Style de la barre de défilement */
+          .chat-message-list {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 20px;
+            scrollbar-width: thin; /* Pour Firefox */
+            scrollbar-color: #555 #2e2e2e; /* Couleurs de la barre et de l'arrière-plan pour Firefox */
+          }
+
+          /* Pour les navigateurs Webkit (Chrome, Safari, Edge) */
+          .chat-message-list::-webkit-scrollbar {
+            width: 12px; /* Largeur de la barre de défilement */
+          }
+
+          .chat-message-list::-webkit-scrollbar-track {
+            background-color: #2e2e2e; /* Couleur de fond de la piste */
+            border-radius: 10px;
+          }
+
+          .chat-message-list::-webkit-scrollbar-thumb {
+            background-color: #555; /* Couleur du pouce (partie déplaçable) */
+            border-radius: 10px;
+            border: 3px solid #2e2e2e; /* Bordure subtile autour du pouce */
+          }
+
+          .chat-message-list::-webkit-scrollbar-thumb:hover {
+            background-color: #3a86ff; /* Couleur au survol */
+          }
+        </style>
+      </head>
+      <body>
+        <div id="chat-container"></div>
+
+        <script src="../src/chat-bubble.js"></script>
+        <script>
+          const chatBubble = new ChatBubble({
+            container: document.getElementById("chat-container"),
+            characterMode: true,
+            hideBubbleImages: true,
+            delayPerMessage: 3000,
+            users: [
+              {
+                id: "bot",
+                name: "ChatGPT",
+                type: "bot",
+                images: { default: "ChatGPT-Logo.jpg" }
+              },
+              {
+                id: "user",
+                name: "romagny13",
+                type: "user",
+                images: { default: "me.jpg" }
+              }
+            ],
+            initialMessages: [
+              {
+                userId: "user",
+                delayPerMessage: 3000, // Légèrement plus long car le message est court, mais il contient un émoji et une question.
+                text: "🧠 Quel est le QI d'une IA comme ChatGPT o1 ?",
+                state: "default"
+              },
+              {
+                userId: "bot",
+                delayPerMessage: 9000, // Le message est plus long, nécessitant un peu plus de temps pour lire.
+                text: `🔍 Le QI ne s'applique pas aux IA. ChatGPT excelle dans des tâches spécifiques comme : 
+- 📚 Traiter du langage naturel 
+- 🧩 Résoudre des problèmes techniques 
+- 📝 Analyser des infos 
+Cependant, il ne "comprend" pas comme un humain, il prédît des réponses. Le QI humain n'est pas pertinent pour une IA.`,
+                state: "default"
+              },
+              {
+                userId: "user",
+                delayPerMessage: 3500, // Un peu plus de temps pour lire le message, car il contient des réflexions.
+                text: "🤔 Le QI des IA serait dans leur capacité à comprendre des prompts erronés.",
+                state: "default"
+              },
+              {
+                userId: "bot",
+                delayPerMessage: 8000, // Ce message est plus dense, donc un peu plus long à lire.
+                text: `Exactement ! Les IA corrigent des erreurs de frappe et comprennent des phrases floues grâce à des modèles statistiques et à des associations probables. Mais ce n'est pas une vraie compréhension, juste un puissant moteur de prédiction.`,
+                state: "default"
+              },
+              {
+                userId: "user",
+                delayPerMessage: 2500, // Message court et simple, donc délai plus court.
+                text: "🤓 J'ai entendu 157 de QI.",
+                state: "default"
+              },
+              {
+                userId: "bot",
+                delayPerMessage: 8000, // Le message est détaillé, donc délai plus long.
+                text: `🔢 Le "157" mentionné est une estimation spéculative basée sur des tâches spécifiques. Le QI humain ne s'applique pas à l'IA, qui est optimisée pour des tâches précises sans conscience ni pensée générale.`,
+                state: "default"
+              },
+              {
+                userId: "user",
+                delayPerMessage: 3500, // La question est un peu plus longue, donc délai un peu plus long.
+                text: "🤔 Oui, le QI des IA, c'est de comprendre ce qu'un utilisateur veut dire même avec des erreurs.",
+                state: "default"
+              },
+              {
+                userId: "bot",
+                delayPerMessage: 8000, // Message détaillé, donc délai plus long pour la lecture.
+                text: `✔️ Exactement ! Les IA corrigent des fautes, devinent l'intention et analysent des patterns pour fournir des réponses logiques. Mais c'est une "intelligence pratique", pas une compréhension humaine.`,
+                state: "default"
+              },
+              {
+                userId: "user",
+                delayPerMessage: 3000, // Message court, délai standard.
+                text: "😅 Cpmmr su j'rcros cpmmr çz ty cpmprrnds ?",
+                state: "default"
+              },
+              {
+                userId: "bot",
+                delayPerMessage: 7000, // Message un peu plus court, mais avec une explication plus détaillée.
+                text: `😂 Bien sûr que je comprends ! Ton message est : **"Comprends-tu si j'écris comme ça ?"**. Les IA analysent les **patterns**, même quand c'est désordonné.`,
+                state: "default"
+              }
+            ]
+          });
+        </script>
+      </body>
+    </html>
+  </head>
+</html>

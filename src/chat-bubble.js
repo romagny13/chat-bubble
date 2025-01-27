@@ -3,7 +3,7 @@ class MessageQueue {
     this._config = {
       delayPerMessage: options.delayPerMessage || 400,
       onMessageProcess: options.onMessageProcess || (() => {}),
-      onQueueComplete: options.onQueueComplete || (() => {}),
+      onQueueComplete: options.onQueueComplete || (() => {})
     };
     this._queue = [];
     this._isSkipDelayEnabled = false; // Renommée pour éviter la confusion
@@ -86,6 +86,7 @@ class MessageQueue {
 
 class ChatBubble {
   constructor(config = {}) {
+    this.version = "2.1.0";
     // Ajouter le mode de personnage à la configuration
     this._config = {
       ...config,
@@ -95,7 +96,7 @@ class ChatBubble {
       delayPerMessage: config.delayPerMessage || 400,
       maxVisibleMessages: config.maxVisibleMessages || 50,
       characterMode: config.characterMode || false,
-      hideBubbleImages: config.hideBubbleImages || false, // Nouvelle option
+      hideBubbleImages: config.hideBubbleImages || false // Nouvelle option
     };
 
     // Autres configurations restent identiques
@@ -108,25 +109,25 @@ class ChatBubble {
       botBubble: "bot",
       timestamp: "chat-bubble-timestamp",
       senderName: "sender-name",
-      imageContainer: "chat-bubble-image-container",
+      imageContainer: "chat-bubble-image-container"
     };
 
     this._animations = {
       enabled: config.animations?.enabled !== false,
       userClass: "animate__animated animate__fadeInRight",
-      botClass: "animate__animated animate__fadeInLeft",
+      botClass: "animate__animated animate__fadeInLeft"
     };
 
     this._container = config.container || document.body;
     this._messages = (config.initialMessages || []).map((msg) => ({
       ...msg,
-      state: msg.state || "default",
+      state: msg.state || "default"
     }));
 
     this._messageQueue = new MessageQueue({
       delayPerMessage: this._config.delayPerMessage,
       onMessageProcess: (message) => this._renderNewMessage(message),
-      onQueueComplete: () => this._config.onQueueComplete?.(),
+      onQueueComplete: () => this._config.onQueueComplete?.()
     });
 
     this._init();
@@ -214,12 +215,32 @@ class ChatBubble {
       this._messageList.removeChild(this._messageList.firstChild);
     }
 
-    const scrollContainer = this._config.characterMode ? this._messageList : this._chatContainer;
-    scrollContainer.scrollTo({
-      top: scrollContainer.scrollHeight,
+    const scrollContainer = this._config.characterMode
+      ? this._messageList
+      : this._chatContainer;
+
+    const lastMessage = scrollContainer.lastChild;
+    lastMessage.scrollIntoView({
       behavior: "smooth",
+      block: "end"
     });
     this._config.onMessageAdded?.(bubble);
+  }
+
+  _formatText(text) {
+    // Remplacer les sauts de ligne par des balises <br>
+    let formattedText = text.replace(/\n/g, "<br>");
+
+    // Remplacer **bold** par <strong>bold</strong>
+    formattedText = formattedText.replace(
+      /\*\*(.*?)\*\*/g,
+      "<strong>$1</strong>"
+    );
+
+    // Remplacer *italic* par <em>italic</em>
+    formattedText = formattedText.replace(/\*(.*?)\*/g, "<em>$1</em>");
+
+    return formattedText;
   }
 
   _createMessageBubble(message) {
@@ -244,9 +265,12 @@ class ChatBubble {
         )}</div>`
       : "";
 
+    // Formatage du texte (ajout des balises HTML pour le formatage)
+    const formattedText = this._formatText(message.text);
+
     bubble.innerHTML = `${imageContainer}
     <div class="${this._styles.senderName}">${user.name}</div>
-    <div class="${this._styles.text}">${message.text}</div>
+    <div class="${this._styles.text}">${formattedText}</div>
     ${timestamp}`;
 
     return bubble;
@@ -262,7 +286,7 @@ class ChatBubble {
           month: "short",
           day: "numeric",
           hour: "2-digit",
-          minute: "2-digit",
+          minute: "2-digit"
         });
 
       case "relative":
@@ -272,7 +296,7 @@ class ChatBubble {
       default:
         return date.toLocaleTimeString([], {
           hour: "2-digit",
-          minute: "2-digit",
+          minute: "2-digit"
         });
     }
   }
