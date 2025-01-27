@@ -236,6 +236,7 @@
             {
               text: "Bonjour! Comment puis-je vous aider aujourd'hui ?",
               userId: "bot",
+              pauseAfter: true,
               timestamp: new Date(baseDate.getTime())
             },
             {
@@ -261,7 +262,7 @@
           ],
           delayPerMessage: 1500,
           maxVisibleMessages: 50,
-          autoplay: !isPaused,
+          // autoplay: !isPaused,
           onPause: () => {
             console.log("pause");
             isPaused = true;

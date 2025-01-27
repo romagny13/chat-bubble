@@ -30,6 +30,11 @@ class MessageQueue {
     while (this._queue.length > 0 && !this._isPaused) {
       const message = this._queue.shift();
       await this._processMessage(message);
+      if (message.pauseAfter) {
+        // Utilisation de pauseAfter
+        this.pause();
+        return;
+      }
     }
 
     // Si la queue est vide ou pause, arrête le process
@@ -54,6 +59,13 @@ class MessageQueue {
         resolve();
       }, delay);
     });
+  }
+
+  _clearCurrentTimeout() {
+    if (this._currentTimeout) {
+      clearTimeout(this._currentTimeout);
+      this._currentTimeout = null;
+    }
   }
 
   add(message) {
@@ -81,13 +93,6 @@ class MessageQueue {
     }
   }
 
-  _clearCurrentTimeout() {
-    if (this._currentTimeout) {
-      clearTimeout(this._currentTimeout);
-      this._currentTimeout = null;
-    }
-  }
-
   pause() {
     this._isPaused = true;
     this._clearCurrentTimeout();
@@ -101,9 +106,67 @@ class MessageQueue {
   }
 }
 
+class TextFormatterService {
+  formatText(text) {
+    let formattedText = text.replace(/\n/g, "<br>");
+    formattedText = formattedText.replace(
+      /\*\*(.*?)\*\*/g,
+      "<strong>$1</strong>"
+    );
+    formattedText = formattedText.replace(/\*(.*?)\*/g, "<em>$1</em>");
+    return formattedText;
+  }
+}
+
+class TimestampFormatterService {
+  formatTimestamp(timestamp, timestampFormat = "time") {
+    const date = new Date(timestamp);
+    switch (timestampFormat) {
+      case "datetime":
+        return date.toLocaleString([], {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit"
+        });
+
+      case "relative":
+        return this._getRelativeTime(date);
+
+      case "time":
+      default:
+        return date.toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit"
+        });
+    }
+  }
+
+  _getRelativeTime(date) {
+    const now = new Date();
+    const diffInSeconds = Math.round((now - date) / 1000);
+
+    if (diffInSeconds < 60) return "just now";
+    if (diffInSeconds < 3600) {
+      const minutes = Math.floor(diffInSeconds / 60);
+      return `${minutes} min ago`;
+    }
+    if (diffInSeconds < 86400) {
+      const hours = Math.floor(diffInSeconds / 3600);
+      return `${hours} hour${hours > 1 ? "s" : ""} ago`;
+    }
+
+    return date.toLocaleDateString();
+  }
+}
+
 class ChatBubble {
   constructor(config = {}) {
-    this.version = "2.4.0";
+    this.version = "2.5.0";
+
+    const defaultTextFormatter = new TextFormatterService();
+    const defaultTimestampFormatter = new TimestampFormatterService();
 
     this._config = {
       ...config,
@@ -114,7 +177,10 @@ class ChatBubble {
       delayPerMessage: config.delayPerMessage || 400,
       maxVisibleMessages: config.maxVisibleMessages || 50,
       characterMode: config.characterMode || false,
-      hideBubbleImages: config.hideBubbleImages || false
+      hideBubbleImages: config.hideBubbleImages || false,
+      // Injection des services par défaut
+      textFormatter: config.textFormatter || defaultTextFormatter,
+      timestampFormatter: config.timestampFormatter || defaultTimestampFormatter
     };
 
     this._styles = {
@@ -245,22 +311,6 @@ class ChatBubble {
     this._config.onMessageAdded?.(bubble);
   }
 
-  _formatText(text) {
-    // Remplacer les sauts de ligne par des balises <br>
-    let formattedText = text.replace(/\n/g, "<br>");
-
-    // Remplacer **bold** par <strong>bold</strong>
-    formattedText = formattedText.replace(
-      /\*\*(.*?)\*\*/g,
-      "<strong>$1</strong>"
-    );
-
-    // Remplacer *italic* par <em>italic</em>
-    formattedText = formattedText.replace(/\*(.*?)\*/g, "<em>$1</em>");
-
-    return formattedText;
-  }
-
   _createMessageBubble(message) {
     const user = this._getUser(message.userId);
     if (!user) {
@@ -278,13 +328,16 @@ class ChatBubble {
       : this._createImageContainer(message.userId, message.state);
 
     const timestamp = message.timestamp
-      ? `<div class="${this._styles.timestamp}">${this._formatTimestamp(
-          message.timestamp
+      ? `<div class="${
+          this._styles.timestamp
+        }">${this._config.timestampFormatter.formatTimestamp(
+          message.timestamp,
+          this._config.timestampFormat
         )}</div>`
       : "";
 
     // Formatage du texte (ajout des balises HTML pour le formatage)
-    const formattedText = this._formatText(message.text);
+    const formattedText = this._config.textFormatter.formatText(message.text);
 
     bubble.innerHTML = `${imageContainer}
       <div class="${this._styles.senderName}">${user.name}</div>
@@ -292,48 +345,6 @@ class ChatBubble {
       ${timestamp}`;
 
     return bubble;
-  }
-
-  _formatTimestamp(timestamp) {
-    const date = new Date(timestamp);
-
-    switch (this._config.timestampFormat) {
-      case "datetime":
-        return date.toLocaleString([], {
-          year: "numeric",
-          month: "short",
-          day: "numeric",
-          hour: "2-digit",
-          minute: "2-digit"
-        });
-
-      case "relative":
-        return this._getRelativeTime(date);
-
-      case "time":
-      default:
-        return date.toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit"
-        });
-    }
-  }
-
-  _getRelativeTime(date) {
-    const now = new Date();
-    const diffInSeconds = Math.round((now - date) / 1000);
-
-    if (diffInSeconds < 60) return "just now";
-    if (diffInSeconds < 3600) {
-      const minutes = Math.floor(diffInSeconds / 60);
-      return `${minutes} min ago`;
-    }
-    if (diffInSeconds < 86400) {
-      const hours = Math.floor(diffInSeconds / 3600);
-      return `${hours} hour${hours > 1 ? "s" : ""} ago`;
-    }
-
-    return date.toLocaleDateString();
   }
 
   addMessage(message) {
